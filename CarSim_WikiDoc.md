@@ -170,6 +170,126 @@ Created On 2023/9/3
 * 传感器模块c api梳理
 * 视觉模块c api梳理
 
+
+    1.struct SimOne_Data_Image : public SimOne_Data（图像数据流）  
+      公有数据：  
+      `int width`  
+      `int height（图像宽与高，宽最大1920，高最大1200）`  
+      `ESimOne_Image_Format format（图像格式，现在仅有RGB形式）`  
+      `int imageDataSize（图像数据大小）`  
+      `char imageData[3840 * 2160 * 3]（图像，最大1920 x 1200 x 3）`    
+
+
+    2.struct SimOne_Data_Point_Cloud : public SimOne_Data（雷达点云数据流）
+      公有数据：  
+      `int width`  
+      `int height  (height与width是指点云数据的高和宽，一般无序点云的高为1，宽为点云中激光点的个数；结构化点云的高和宽均大于1)`  
+      `int pointStep   (pointstep表示每个点的字节长度，常见的为32)`  
+      `int pointCloudDataSize`  
+      `char pointCloudData[3686400]  (data表示所有的点的数据，以字节存储)`  
+
+
+    3.	struct SimOne_Data_RadarDetection : public SimOne_Data（Radar探测数据流）
+        公有数据：
+
+        `int detectNum （探测的物体数量）`  
+        `SimOne_Data_RadarDetection_Entry detections[256]（探测物体的信息数组，最大256个）`  
+        `其中：SimOne_Data_RadarDetection_Entry类包含：`  
+		`int id（物体编号）`  
+		`int subId （物体Sub编号？？？）`  
+		`ESimOne_Obstacle_Type type（障碍物类型）`  
+		`float posX`  
+		`float posY`  
+		`float posZ（障碍物位置）`  
+		`float velX`  
+		`float velY`  
+		`float velZ（障碍物速度）`  
+		`float accelX`  
+		`float accelY`  
+		`float accelZ（障碍物加速度）`  
+		`float oriX`  
+		`float oriY`  
+		`float oriZ（障碍物角度）`  
+		`float length`  
+		`float width`  
+		`float height（障碍物尺寸）`  
+                `float range（检测对象相对范围（以米为单位））`  
+                `float rangeRate（检测对象相对距离速率（以米/秒为单位））`  
+                `float azimuth（检测对象方位角）`   
+                `float vertical（检测对象垂直角度）`    
+                `float snrdb（信噪比）`  
+                `float rcsdb（探测雷达散射截面（RCS））`    
+                `float probability（检测概率？？？）`  
+
+
+
+    4.	struct SimOne_Data_SensorDetections : public SimOne_Data（传感器检测）
+        公有数据：  
+        `int objectSize（探测物体尺寸）`  
+        `SimOne_Data_SensorDetections_Entry objects[256]（传感器探测数据类（最大256个））`  
+        `其中：struct SimOne_Data_SensorDetections_Entry：`    
+		`int id`      
+		`ESimOne_Obstacle_Type typ`      
+		`float posX`  
+		`float posY`  
+		`float posZ（障碍物位置）`  
+		`float oriX`  
+		`float oriY`  
+		`float oriZ（障碍物角度）`  
+		`float length`  
+		`float width`  
+		`float height（障碍物尺寸）`  
+		`float range（检测对象相对范围（以米为单位））`  
+		`float velX`  
+		`float velY`  
+		`float velZ（障碍物速度）`  
+		`float accelX`  
+		`float accelY`  
+		`float accelZ（障碍物加速度）`  
+		`float probability（检测概率）`  
+		`float relativePosX`  
+                `float relativePosY`  
+                `float relativePosZ（传感器空间中的相对位置）`  
+                `float relativeRotX`  
+                `float relativeRotY`  
+                `float relativeRotZ（传感器空间中的相对角度）`  
+                `float relativeVelX`  
+                `float relativeVelY`  
+                `float relativeVelZ（传感器空间中的相对速度）`  
+                `float bbox2dMinX = 0`  
+                `float bbox2dMinY = 0`  
+                `float bbox2dMaxX = 0`  
+                `float bbox2dMaxY = 0（bbox2d碰撞模型下最大以及最小XY坐标）`  
+   
+
+    5.	struct SimOne_Data_SensorFusionObstacles : public SimOne_Data：（传感器融合障碍）
+    公有数据：  
+    `int obstacleSize（同上）`  
+    `SimOne_Data_SensorDetections_Entry obstacle[256]（结构同上）`  
+
+
+    6.	struct SimOne_Data_UltrasonicRadar : public SimOne_Data（超声波雷达数据）
+    公有数据：  
+    `char sensorId[64]（超声波雷达编号）`  
+    `int obstacleNum（障碍物范围编号）`  
+    `SimOne_Data_UltrasonicRadarDetection_Entry obstacleDetections[255]（超声波雷达信号接口类）`  
+	`其中：struct SimOne_Data_UltrasonicRadarDetection_Entry`  
+	`float obstacleRanges = 0`  
+	`float x = 0`  
+	`float y = 0`  
+	`float z = 0`  
+
+
+    7.	struct SimOne_Data_UltrasonicRadars : public SimOne_Data：（多超声波雷达数据）
+    公有数据：  
+    `int ultrasonicRadarNum（超声波雷达数量）`  
+    `SimOne_Data_UltrasonicRadar ultrasonicRadars[100]（超声波雷达数据（最大100））`  
+	`其中:struct SimOne_Data_UltrasonicRadar : public SimOne_Data`  
+	`char sensorId[64]（传感器编号（名称））`  
+	`int obstacleNum（障碍物数量）`  
+	`SimOne_Data_UltrasonicRadarDetection_Entry obstacleDetections[255]（超声波雷达信号接口类）同上`  
+
+             
 `颜铭`：
 
 * python api doc summary
