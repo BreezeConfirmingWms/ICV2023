@@ -3,7 +3,6 @@ from SimOneSensorAPI import *
 from SimOneV2XAPI import *
 from SimOnePNCAPI import *
 from SimOneStreamingAPI import *
-from SimOneV2XAPI import *
 import HDMapAPI as HDMapAPI
 
 from SimOneEvaluation import *
@@ -16,6 +15,7 @@ import math
 import numpy as np
 import pandas as pd
 from scipy import optimize, stats, signal, linalg
+import sympy
 
 
 def start():
@@ -72,44 +72,68 @@ if __name__ == '__main__':
         print(e)
         pass
 
+
+
+
     # SoApiSetV2XInfoUpdateCB(SoV2XCB)
     # SoAPISetMainVehicleStatusUpdateCB(SoMainVehicleStaus)
     # SoApiSetSensorDetectionsUpdateCB(SoSetSensorDetectionUpdateCBTest)
     # SoApiSetGpsUpdateCB(SoGpsCB)
-   # SoSetDriveMode(mainVehicleID, driverMode="ESimOne_Drive_Mode_API")
 
+
+    SoSetDriveMode(mainVehicleID, driverMode="ESimOne_Drive_Mode_API")
+    InitEvaluationServiceWithLocalData(mainVehicleID)
+
+    while 1:
+        logger_control = ESimOne_LogLevel_Type(0)
+        if HDMapAPI.loadHDMap(20):
+            SoSetLogOut(logger_control, "HDMAP LOADED")
+
+            # pass
+            break
 
     velX = np.linspace(0, 10, 100)
     velY = np.linspace(0, 20, 100)
     velT = np.linspace(0, 0.5, 100)
     velS = np.linspace(0, 0.3, 100)
+
+    M=1696*1e3
+
+    r = 33.90
+
+    a_f = 0.6
+
+
     c = 0
     cnt = 1
     pose_upd = SimOne_Data_Pose_Control()
     control_upd = SimOne_Data_Control()
+
+
+
     pd_data = SimOne_Data_Point_Cloud()
-    gpsData = SimOne_Data_Gps()
+    gps_data = SimOne_Data_Gps()
+
+
     waypointData = SimOne_Data_WayPoints()
     Obstacle = SimOne_Data_Obstacle()
     stream = SimOne_Data_Image()
+    # if SoGetGps(mainVehicleID, gps_data):
+    #     print(f"init velX : {gps_data.velX}")
+    judge = False
+    endJudge=False
 
-
-
-    # 这里需要把评估函数单独放入一个while循环
-    InitEvaluationServiceWithLocalData(mainVehicleID)
-    while 1:
-        logger_control = ESimOne_LogLevel_Type(0)
-
-        if HDMapAPI.loadHDMap(20):
-            SoSetLogOut(logger_control, "HDMAP LOADED")
-            SaveEvaluationRecord()
-            # pass
-            break
-
-
-
+    initX=None
+    endX=None
     while Flag:
 
+        S = SoGetCaseRunStatus()
+        if S==1:
+            SaveEvaluationRecord()
+            break
+        # if not SoGetCaseRunStatus():
+        #     SaveEvaluationRecord()
+        #     break
         # waypoint = SimOne_Data_WayPoints()
         # SoGetWayPoints(mainVehicleID,waypoint)
         # vehicleState = (ESimOne_Data_Vehicle_State * 3)(
@@ -146,31 +170,69 @@ if __name__ == '__main__':
         # 	if cnt%20==0:
         # 		print("the vechile is moving!")
         # 		print("the pose data posX:{} and posY:{}".format(pose_upd.posX,pose_upd.posY))
-        control_upd.brake = 0.1
-        if SoSetDrive(mainVehicleID, control_upd):
-            if cnt % 20 == 0:
-                print("the throttle is boost!")
-                print("the brake data {}".format(control_upd.brake))
 
-        if SoGetGroundTruth(mainVehicleID,Obstacle):
+        sencfg_data = SimOne_Data_SensorConfiguration()
+        if SoGetSensorConfigurations(mainVehicleID,sencfg_data) :
 
-            if cnt % 20 == 0:
-                print(Obstacle.obstacleSize)
-                print("Obstacle one's position is: \
-                X:{0}, Y:{1}, Z:{2}".format(Obstacle.obstacle[0].posX,
-                Obstacle.obstacle[0].posY,
-                Obstacle.obstacle[0].posX))
+            print(sencfg_data.sensorId)
+
+
+
+
+        control_upd.EBrakeMode=ESimOne_Brake_Mode(0)
+        #control_upd.brake = M*a_f*r
+
+
+        """
+        protected
+        """
+       #control_upd.brake = 0.0263
+
+        control_upd.brake = 0.0263
+
+        if not judge and SoGetGps(mainVehicleID,gps_data) and gps_data.velX>0:
+            initX=gps_data.posX
+            print("init position is :{}".format(initX))
+            judge=True
+
+        if SoSetDrive(mainVehicleID, control_upd) and SoGetGps(mainVehicleID,gps_data) and gps_data.velX>0:
+            if cnt % 5 == 0 and not endJudge:
+                print("running online: {}".format(S))
+               # print("the brake data {}".format(control_upd.brake))
+                print("accel X: {}".format(gps_data.accelX))
+                print("vel X: {}".format(gps_data.velX))
+                print("brake : {}".format(gps_data.brake))
+                print("throttle : {}".format(gps_data.throttle))
+
+                if abs(gps_data.velX-0) < 1e-3 and not endJudge:
+                    endX=gps_data.posX
+                    print("total move distance is {}".format(endX-initX))
+
+                    endJudge=True
+
+
+
+
+
+        # if SoGetGroundTruth(mainVehicleID,Obstacle):
+        #
+        #     if cnt%20==0:
+        #         print(Obstacle.obstacleSize)
+        #         print("Obstacle one's position is: \
+        #         X:{0}, Y:{1}, Z:{2}".format(Obstacle.obstacle[0].posX,
+        #         Obstacle.obstacle[0].posY,
+        #         Obstacle.obstacle[0].posX))
         # if SoGetWayPoints(mainVehicleID,waypointData):
         # 	pass
         if c < 99:
             c += 1
         cnt += 1
 
-        if SoGetStreamingImage(ip = "127.0.0.1",port= 13956,imageData=stream):
-            #print(stream.width, stream.height)
-            pass
 
 
+        # if SoGetStreamingImage(ip = "127.0.0.1",port= 13956,imageData=stream):
+        #     #print(stream.width, stream.height)
+        #     pass
 
 
 
