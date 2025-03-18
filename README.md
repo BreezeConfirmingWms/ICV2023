@@ -6,6 +6,21 @@ CopyRight@同砚路科研攻关队
 项目文档参阅wiki（每个人都准备一个自己的wiki）
 
 
+
+
+## 最终获奖结果公示：
+[官方获奖公告pdf下载链接🔗](https://etc.tute.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1453167027&wbfileid=8B2454D73F3CDE1B8704A6FE5875520C)
+![image](https://github.com/user-attachments/assets/a30a804c-100e-4beb-81e1-c34a13d77766)
+
+
+(注：指导教师旁边是组委会认定的第一技术负责人)
+
+我们队伍排第七，请大家再接再厉。
+![image](https://github.com/user-attachments/assets/d6a15c51-b434-482f-9c0a-3f1c37611d49)
+
+![image](https://github.com/user-attachments/assets/8725d0f7-088f-4afe-942b-739ad26c6f40)
+
+
 ****
 :clock1:     :省赛前一周：自动驾驶任务测试进度表
 
